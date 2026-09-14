@@ -1,0 +1,83 @@
+from building import *
+import hashlib
+import os
+from SCons.Errors import UserError
+Import('rtconfig')
+
+cwd = GetCurrentDir()
+project_root = Dir('#').abspath.replace('\\', '/')
+repository_root = os.path.abspath(os.path.join(project_root, '..')).replace('\\', '/')
+
+asset_identities = {
+    cwd + '/TFLM_PERSON_U55_int8x8.tflite': (
+        239744, '6af50c70d0b95e4c151e0b2c50cd284bdf04246922a62bf8523166bebfccd2d0'),
+    cwd + '/TFLM_PERSON_U55_samples2.bin': (
+        18448, '6fc6c5def0138c0dc3eb940f9d2a7aaba7cc899f13ae0e7a0ada49b02ff575ac'),
+    project_root + '/licenses/TFLM_PERSON_DETECTION_APACHE-2.0.txt': (
+        11358, 'cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30'),
+}
+
+for asset_path, identity in asset_identities.items():
+    expected_size, expected_sha256 = identity
+    if not os.path.isfile(asset_path):
+        raise UserError('Required NPU asset is missing: ' + asset_path)
+    actual_size = os.path.getsize(asset_path)
+    with open(asset_path, 'rb') as asset_file:
+        actual_sha256 = hashlib.sha256(asset_file.read()).hexdigest()
+    if actual_size != expected_size or actual_sha256 != expected_sha256:
+        raise UserError(
+            'NPU asset identity mismatch: %s (size %d, SHA256 %s)' %
+            (asset_path, actual_size, actual_sha256.upper()))
+
+deepcraft_root = repository_root + '/libraries/Common/deepcraft_ai'
+ml_middleware = deepcraft_root + '/third_party/ml-middleware'
+tflm_root = deepcraft_root + '/third_party/ml-tflite-micro/COMPONENT_ML_TFLM'
+pdl_root = repository_root + '/libraries/components/mtb-device-support-pse8xxgp/pdl'
+ethosu_root = pdl_root + '/drivers/third_party/COMPONENT_U55'
+gcc_cxx_multilib = (
+    os.path.dirname(rtconfig.EXEC_PATH).replace('\\', '/') +
+    '/arm-none-eabi/include/c++/13.3.1/arm-none-eabi/thumb/v8-m.main+dp/hard')
+src = [
+    cwd + '/ai_kit_npu.c',
+    cwd + '/ai_kit_npu_assets.S',
+    repository_root + '/rt-thread/components/libc/cplusplus/cxx_crt_init.c',
+    ml_middleware + '/source/mtb_ml.c',
+    ml_middleware + '/source/COMPONENT_ML_TFLM/mtb_ml_model.cpp',
+    ml_middleware + '/source/COMPONENT_U55/mtb_ml_ethosu.c',
+    ethosu_root + '/src/ethosu_driver.c',
+    ethosu_root + '/src/ethosu_device_u55_u65.c',
+    ethosu_root + '/src/ethosu_pmu.c',
+]
+
+cpp_path = [
+    cwd,
+    ml_middleware + '/include',
+    ml_middleware + '/source',
+    ml_middleware + '/source/COMPONENT_ML_TFLM',
+    tflm_root + '/include',
+    tflm_root + '/include/flatbuffers/include',
+    tflm_root + '/include/gemmlowp',
+    tflm_root + '/include/gemmlowp/fixedpoint',
+    tflm_root + '/include/ethos-u-core-driver',
+    ethosu_root + '/include',
+    ethosu_root + '/src',
+]
+
+cpp_defines = [
+    'ARM_MATH_AUTOVECTORIZE', 'ARM_MATH_DSP', 'ARM_MATH_HELIUM',
+    'COMPONENT_CM55', 'COMPONENT_CM55_0', 'COMPONENT_ML_INT8x8',
+    'COMPONENT_ML_TFLM', 'COMPONENT_U55', 'ETHOSU55',
+    'TF_LITE_STATIC_MEMORY',
+    'MTB_ML_ETHOSU_CACHE_MGMT_TYPE=MTB_ML_ETHOSU_CACHE_MGMT_ALL_LAYERS',
+]
+
+arch_flags = ' -mcpu=cortex-m55 -mthumb -mfloat-abi=hard -mfpu=auto'
+group = DefineGroup(
+    'AiKitNpu', src, depend=[], CPPPATH=cpp_path,
+    CPPDEFINES=cpp_defines, LOCAL_CFLAGS=arch_flags,
+    LOCAL_CXXFLAGS=(arch_flags + ' -fno-exceptions -fno-rtti' +
+                    ' -isystem ' + gcc_cxx_multilib),
+    LIBPATH=[tflm_root + '/COMPONENT_U55/TOOLCHAIN_GCC_ARM'],
+    LIBS=['tensorflow-microlite', 'stdc++'])
+
+Return('group')

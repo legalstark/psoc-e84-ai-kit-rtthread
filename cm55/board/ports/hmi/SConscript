@@ -1,0 +1,24 @@
+Import('rtconfig')
+Import('SDK_LIB')
+from building import *
+
+cwd = GetCurrentDir()
+src = Glob('*.c')
+gfxss_root = SDK_LIB + '/mtb-device-support-pse8xxgp/pdl/drivers/third_party/COMPONENT_GFXSS'
+path = [
+    cwd,
+    SDK_LIB + '/lvgl_9.2.0',
+    SDK_LIB + '/lvgl_9.2.0/src',
+    gfxss_root,
+    gfxss_root + '/vsi/dcnano8000',
+    gfxss_root + '/vsi/gcnano',
+]
+
+group = DefineGroup(
+    'AI Kit HMI',
+    src,
+    depend=['BSP_USING_AI_KIT_DSI'],
+    CPPPATH=path,
+)
+
+Return('group')

@@ -1,0 +1,50 @@
+import os
+from building import *
+
+cwd = GetCurrentDir()
+src = Glob('*.c')
+path = [cwd]
+
+CPPDEFINES = [
+    'BLHS_SUPPORT',
+    'COMPONENT_APP_KIT_PSE84_AI',
+    'COMPONENT_CM33',
+    'COMPONENT_CM33_0',
+    'COMPONENT_Debug',
+    'COMPONENT_GCC_ARM',
+    'COMPONENT_MTB_DEVICE_SUPPORT',
+    'COMPONENT_MTB_HAL',
+    'COMPONENT_MW_CMSIS',
+    'COMPONENT_MW_CORE_LIB',
+    'COMPONENT_MW_MTB_DSL_PSE8XXGP',
+    'COMPONENT_NON_SECURE_DEVICE',
+    'COMPONENT_PSE84',
+    'COMPONENT_SOFTFP',
+    'CORE_NAME_CM33_0=1',
+    'CY_APPNAME_proj_cm33_ns',
+    'CYBSP_MCUBOOT_HEADER_SIZE=0x400',
+    'CY_SRF_DISABLE',
+    'CY_SUPPORTS_DEVICE_VALIDATION',
+    'CY_TARGET_BOARD=APP_KIT_PSE84_AI',
+    'DEBUG',
+    'FLASH_BOOT',
+    'CY_PDL_FLASH_BOOT',
+    'PSE846GPS2DBZC4A',
+    'TARGET_APP_KIT_PSE84_AI',
+    'TRXV5',
+]
+
+group = DefineGroup(
+    'Board',
+    src,
+    depend=[''],
+    CPPPATH=path,
+    CPPDEFINES=CPPDEFINES,
+)
+
+for item in os.listdir(cwd):
+    sconscript = os.path.join(cwd, item, 'SConscript')
+    if os.path.isfile(sconscript):
+        group += SConscript(sconscript)
+
+Return('group')

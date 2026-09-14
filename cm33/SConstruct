@@ -1,0 +1,158 @@
+import os
+import platform
+import subprocess
+import sys
+import uuid
+
+import rtconfig
+
+print('Build profile: ' + rtconfig.BUILD)
+
+RTT_ROOT = os.path.normpath(os.path.join(os.getcwd(), '..', 'rt-thread'))
+
+sys.path.append(os.path.join(RTT_ROOT, 'tools'))
+try:
+    from building import *
+except Exception as exception:
+    print('Error message:', exception)
+    print('Cannot find RT-Thread root directory, please check RTT_ROOT')
+    print(RTT_ROOT)
+    sys.exit(-1)
+
+TARGET = 'rt-thread.' + rtconfig.TARGET_EXT
+DEBUG_DIR = 'build'
+
+DefaultEnvironment(tools=[])
+env = Environment(
+    tools=['mingw'],
+    ENV=os.environ,
+    AS=rtconfig.AS,
+    ASFLAGS=rtconfig.AFLAGS,
+    CC=rtconfig.CC,
+    CFLAGS=rtconfig.CFLAGS,
+    AR=rtconfig.AR,
+    ARFLAGS='-rc',
+    CXX=rtconfig.CXX,
+    CXXFLAGS=rtconfig.CXXFLAGS,
+    LINK=rtconfig.LINK,
+    LINKFLAGS=rtconfig.LFLAGS,
+)
+env.PrependENVPath('PATH', rtconfig.EXEC_PATH)
+
+OBJCOPY = os.path.join(rtconfig.EXEC_PATH, 'arm-none-eabi-objcopy')
+
+Export('RTT_ROOT')
+Export('rtconfig')
+
+SDK_ROOT = os.path.abspath('.')
+SDK_LIB = os.path.join(SDK_ROOT, '..', 'libraries', 'components')
+Export('SDK_LIB')
+
+def ourspawn(sh, escape, cmd, args, process_env):
+    response_file = str(uuid.uuid4())
+    cmdline = cmd + ' ' + ' '.join(args[1:])
+
+    if len(cmdline) > 16 * 1024:
+        with open(response_file, 'w') as response:
+            response.write(' '.join(args[1:]).replace('\\', '/'))
+        cmdline = cmd + ' @' + response_file
+
+    process = subprocess.Popen(
+        cmdline,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=False,
+        env=process_env,
+    )
+    stdout_data, stderr_data = process.communicate()
+    result = process.wait()
+
+    for output, stream in (
+        (stderr_data, sys.stderr),
+        (stdout_data, sys.stdout),
+    ):
+        if isinstance(output, bytes):
+            output = output.decode('UTF-8', errors='replace')
+        if output:
+            stream.write(str(output))
+
+    if os.path.isfile(response_file):
+        os.remove(response_file)
+
+    return result
+
+
+if platform.system() == 'Windows':
+    env['SPAWN'] = ourspawn
+
+objs = PrepareBuilding(env, RTT_ROOT, has_libcpu=False)
+
+rtconfig.BSP_LIBRARY_TYPE = 'Packages'
+
+env.VariantDir('build/libs', 'libs', duplicate=0)
+library_root = '../libraries'
+env.VariantDir(
+    'build/libraries/HAL_Drivers',
+    library_root + '/HAL_Drivers',
+    duplicate=0,
+)
+env.VariantDir(
+    'build/libraries/components',
+    library_root + '/components',
+    duplicate=0,
+)
+env.VariantDir(
+    'build/libraries/Common/board',
+    library_root + '/Common/board',
+    duplicate=0,
+)
+
+library_scripts = [
+    (
+        library_root + '/HAL_Drivers/SConscript',
+        'build/libraries/HAL_Drivers',
+    ),
+    (
+        library_root + '/components/Infineon_cmsis-latest/SConscript',
+        'build/libraries/components/Infineon_cmsis-latest',
+    ),
+    (
+        library_root + '/components/Infineon_core-lib-latest/SConscript',
+        'build/libraries/components/Infineon_core-lib-latest',
+    ),
+    (
+        library_root + '/components/mtb-device-support-pse8xxgp/hal/SConscript',
+        'build/libraries/components/mtb-device-support-pse8xxgp/hal',
+    ),
+    (
+        library_root + '/components/mtb-device-support-pse8xxgp/pdl/SConscript',
+        'build/libraries/components/mtb-device-support-pse8xxgp/pdl',
+    ),
+    (
+        library_root + '/components/SConscript',
+        'build/libraries/components',
+    ),
+    (
+        library_root + '/Common/board/SConscript',
+        'build/libraries/Common/board',
+    ),
+]
+
+for script, variant_dir in library_scripts:
+    if not os.path.exists(script):
+        raise RuntimeError('Required SConscript not found: ' + script)
+    objs.extend(SConscript(script, variant_dir=variant_dir, duplicate=0))
+
+DoBuilding(TARGET, objs)
+
+if not os.path.exists(DEBUG_DIR):
+    os.makedirs(DEBUG_DIR)
+
+hex_file = env.Command(
+    os.path.join(DEBUG_DIR, 'rtthread_app.hex'),
+    TARGET,
+    OBJCOPY + ' -O ihex $SOURCE $TARGET',
+)
+
+Default(hex_file)

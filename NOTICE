@@ -1,0 +1,7 @@
+PSoC Edge E84 AI Kit RT-Thread Dual-Core Demo
+Copyright 2026 Project Contributors
+
+This product includes software developed by the RT-Thread project, Infineon
+Technologies, LVGL, CherryUSB, TensorFlow Lite Micro, EEMBC, SEGGER, and their
+respective contributors. See docs/THIRD_PARTY_NOTICES.md and the license files
+shipped with each dependency.

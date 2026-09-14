@@ -1,0 +1,15 @@
+* text=auto
+
+# Identity-checked assets must survive Windows checkout byte-for-byte.
+cm55/licenses/TFLM_PERSON_DETECTION_APACHE-2.0.txt text eol=lf
+*.tflite binary
+*.bin binary
+*.trxcse binary
+*.clm_blob binary
+*.a binary
+*.flm binary
+*.FLM binary
+*.otf binary
+*.png binary
+*.jpg binary
+*.gif binary

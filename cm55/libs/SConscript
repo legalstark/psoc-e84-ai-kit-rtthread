@@ -1,0 +1,47 @@
+Import('RTT_ROOT')
+Import('rtconfig')
+Import('SDK_LIB')
+from building import *
+
+cwd = GetCurrentDir()
+bsp_dir = 'TARGET_APP_KIT_PSE84_AI'
+
+src = [
+    bsp_dir + '/cybsp.c',
+    bsp_dir + '/system_edge.c',
+    bsp_dir + '/COMPONENT_CM55/COMPONENT_NON_SECURE_DEVICE/ns_system_pse84.c',
+    bsp_dir + '/COMPONENT_CM55/COMPONENT_NON_SECURE_DEVICE/ns_start_pse84.c',
+]
+src += Glob(bsp_dir + '/config/GeneratedSource/*.c')
+
+if GetDepend('BSP_USING_AI_KIT_DSI'):
+    src += ['display-dsi-waveshare-4-3-lcd/mtb_disp_dsi_waveshare_4p3.c']
+
+if GetDepend('BSP_USING_AI_KIT_TOUCH'):
+    src += ['touch-ctp-ft5406/mtb_ctp_ft5406.c']
+
+path = [
+    cwd + '/' + bsp_dir,
+    cwd + '/' + bsp_dir + '/config',
+    cwd + '/' + bsp_dir + '/config/GeneratedSource',
+    cwd + '/' + bsp_dir + '/COMPONENT_CM55',
+    cwd + '/' + bsp_dir + '/COMPONENT_CM55/COMPONENT_NON_SECURE_DEVICE',
+    SDK_LIB + '/mtb-srf/include',
+    SDK_LIB + '/mtb-srf/include/COMPONENT_NON_SECURE_DEVICE',
+]
+
+if GetDepend('BSP_USING_AI_KIT_DSI'):
+    path += [cwd + '/display-dsi-waveshare-4-3-lcd']
+
+if GetDepend('BSP_USING_AI_KIT_TOUCH'):
+    path += [cwd + '/touch-ctp-ft5406']
+
+group = DefineGroup(
+    'AI Kit CM55 BSP',
+    src,
+    depend=[''],
+    CPPPATH=path,
+    LOCAL_CPPPATH=path,
+)
+
+Return('group')

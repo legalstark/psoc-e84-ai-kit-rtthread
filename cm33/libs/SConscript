@@ -1,0 +1,35 @@
+Import('RTT_ROOT')
+Import('rtconfig')
+Import('SDK_LIB')
+from building import *
+
+cwd = GetCurrentDir()
+bsp_dir = 'TARGET_APP_KIT_PSE84_AI'
+
+src = [
+    bsp_dir + '/cybsp.c',
+    bsp_dir + '/system_edge.c',
+    bsp_dir + '/COMPONENT_CM33/COMPONENT_NON_SECURE_DEVICE/ns_system_pse84.c',
+    bsp_dir + '/COMPONENT_CM33/COMPONENT_NON_SECURE_DEVICE/ns_start_pse84.c',
+]
+src += Glob(bsp_dir + '/config/GeneratedSource/*.c')
+
+path = [
+    cwd + '/' + bsp_dir,
+    cwd + '/' + bsp_dir + '/config',
+    cwd + '/' + bsp_dir + '/config/GeneratedSource',
+    cwd + '/' + bsp_dir + '/COMPONENT_CM33',
+    cwd + '/' + bsp_dir + '/COMPONENT_CM33/COMPONENT_NON_SECURE_DEVICE',
+    SDK_LIB + '/mtb-srf/include',
+    SDK_LIB + '/mtb-srf/include/COMPONENT_NON_SECURE_DEVICE',
+]
+
+group = DefineGroup(
+    'AI Kit BSP',
+    src,
+    depend=[''],
+    CPPPATH=path,
+    LOCAL_CPPPATH=path,
+)
+
+Return('group')

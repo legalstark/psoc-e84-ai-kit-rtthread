@@ -1,0 +1,58 @@
+import os
+import rtconfig
+from building import *
+
+Import('SDK_LIB')
+
+cwd = GetCurrentDir()
+
+# add common drivers
+src = []
+path =  [cwd]
+CPPDEFINES = []
+
+if GetDepend(['BSP_USING_FLASH']):
+    src += Glob('ports/fal/fal_flash_port.c')
+    path += [cwd + '/ports/fal']
+
+if GetDepend(['BSP_USING_PSRAM']):
+    src += Glob('ports/ai_kit_psram.c')
+    path += [cwd + '/ports']
+
+if GetDepend(['BSP_USING_AUDIO_RECORD']):
+    src += Glob('ports/audio/drv_mic.c')
+    path += [cwd + '/ports/audio']
+
+if GetDepend(['BSP_USING_AUDIO_PLAY']):
+    src += Glob('ports/audio/drv_es8388.c')
+    path += [cwd + '/ports/audio']
+
+if GetDepend(['BSP_USING_FILESYSTEM']):
+    src += Glob('ports/filesystem/*.c')
+
+if GetDepend(['PKG_USING_CHERRYUSB']) or GetDepend(['RT_USING_CHERRYUSB']):
+    path += [cwd + '/ports/usb']
+
+if GetDepend(['BSP_USING_LCD']):
+    path += [cwd + '/ports/display_panels']
+
+if GetDepend(['BSP_USING_LVGL']):
+    path += [cwd + '/ports/lvgl']
+    if GetDepend(['BSP_USING_AI_KIT_DSI']):
+        src += [
+            cwd + '/ports/lvgl/lv_refr.c',
+            cwd + '/ports/lvgl/lv_draw_vg_lite.c',
+            cwd + '/ports/lvgl/lv_draw_vg_lite_img.c',
+            cwd + '/ports/lvgl/lv_vg_lite_utils.c',
+        ]
+    else:
+        src += Glob('ports/lvgl/*.c')
+
+group = DefineGroup('Common', src, depend = [''], CPPPATH = path, CPPDEFINES = CPPDEFINES)
+
+list = os.listdir(cwd)
+for item in list:
+    if os.path.isfile(os.path.join(cwd, item, 'SConscript')):
+        group = group + SConscript(os.path.join(item, 'SConscript'))
+
+Return('group')

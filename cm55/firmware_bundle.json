@@ -1,0 +1,71 @@
+{
+    "schema-version": 1.0,
+    "content": [
+        {
+            "name": "relocate_cm33_ns",
+            "enabled": true,
+            "commands": [
+                {
+                    "command": "hex-relocate",
+                    "inputs": [
+                        {
+                            "file": "../cm33/build/rtthread_app.hex",
+                            "regions": [
+                                { "start": "0x02000000", "size": "0x00080000", "dest": "0x22000000" },
+                                { "start": "0x04000000", "size": "0x00100000", "dest": "0x24000000" },
+                                { "start": "0x06000000", "size": "0x00500000", "dest": "0x26000000" },
+                                { "start": "0x08000000", "size": "0x01000000", "dest": "0x60000000" },
+                                { "start": "0x0C000000", "size": "0x01000000", "dest": "0x64000000" },
+                                { "start": "0x12000000", "size": "0x00080000", "dest": "0x32000000" },
+                                { "start": "0x14000000", "size": "0x00100000", "dest": "0x34000000" },
+                                { "start": "0x16000000", "size": "0x00500000", "dest": "0x36000000" },
+                                { "start": "0x18000000", "size": "0x01000000", "dest": "0x70000000" },
+                                { "start": "0x1C000000", "size": "0x01000000", "dest": "0x74000000" }
+                            ]
+                        }
+                    ],
+                    "outputs": [ { "file": "build/ai_kit_cm33_relocated.hex" } ]
+                }
+            ]
+        },
+        {
+            "name": "normalize_cm55",
+            "enabled": true,
+            "commands": [
+                {
+                    "command": "hex-relocate",
+                    "inputs": [
+                        {
+                            "file": "rtthread.hex",
+                            "regions": [
+                                { "start": "0x60000000", "size": "0x01000000", "dest": "0x60000000" }
+                            ]
+                        }
+                    ],
+                    "outputs": [ { "file": "build/ai_kit_cm55_program.hex" } ]
+                }
+            ]
+        },
+        {
+            "name": "merge_release_firmware",
+            "enabled": true,
+            "commands": [
+                {
+                    "command": "merge",
+                    "inputs": [
+                        { "file": "build/ai_kit_cm33_relocated.hex" },
+                        { "file": "../cm33/tools/secure/proj_cm33_s_signed.hex" },
+                        { "file": "build/ai_kit_cm55_program.hex" }
+                    ],
+                    "outputs": [
+                        {
+                            "file": "build/ai_kit_rtthread_cm33_cm55.hex",
+                            "format": "ihex",
+                            "overlap": "error"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

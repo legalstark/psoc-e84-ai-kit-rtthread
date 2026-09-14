@@ -1,0 +1,51 @@
+# Build outputs
+build/
+Debug/
+artifacts/
+*.o
+*.obj
+*.d
+*.dep
+*.elf
+*.map
+*.hex
+*.axf
+*.dblite
+.sconsign*
+*.pyc
+__pycache__/
+
+# Restricted/private dependencies
+libraries/components/emusb-host/
+cm33/tools/secure/
+cm33/libraries/
+cm33/rt-thread/
+cm33/tools/edgeprotecttools/
+cm55/libraries/
+cm55/rt-thread/
+.deps-cache/
+overlays/
+docs/guide.md
+docs/PROJECT_HANDOVER.md
+cm55/THIRD_PARTY_ASSETS.md
+cm55/resources/
+
+# IDE and host-local state
+.metadata/
+.m55_headless_build_ws*/
+*.log
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+.eide/
+.vscode/
+*.code-workspace
+
+# Keep RT-Thread Studio project metadata.
+!cm33/.project
+!cm33/.cproject
+!cm33/.settings/
+!cm55/.project
+!cm55/.cproject
+!cm55/.settings/

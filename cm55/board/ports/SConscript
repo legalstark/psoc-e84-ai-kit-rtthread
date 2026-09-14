@@ -1,0 +1,5 @@
+from building import *
+
+group = SConscript('hmi/SConscript')
+
+Return('group')

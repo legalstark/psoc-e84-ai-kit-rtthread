@@ -1,0 +1,10 @@
+.PHONY: clean clean2
+
+clean: clean2
+
+clean2:
+	-$(RM) applications board generated kernel libraries libs packages rt-thread
+	-$(RM) *.elf *.hex *.bin *.map *.siz link.temp
+	-@echo ' '
+
+*.elf:
