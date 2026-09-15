@@ -8,6 +8,13 @@
 > 外设配置不能直接用于 AI Kit；ECO、引脚、Secure 资源归属和存储布局均以
 > AI Kit 配置为准。
 
+## 实际运行效果
+
+![PSoC Edge E84 AI Kit 运行 RT-Thread 双核 HMI](docs/images/psoc-edge-hmi-launcher.jpg)
+
+AI Kit 连接 Waveshare 5inch DSI LCD (B) 后的实机界面，展示了
+Hardware、Performance、Camera、Settings、Wi-Fi 和 About 入口。
+
 ## 已实现功能
 
 - Cortex-M33 与 Cortex-M55 双核 RT-Thread 5.0.2。
